@@ -1,7 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Plus, MoreHorizontal, Pencil } from "lucide-react";
+import { DeleteIcon } from "@/components/ui/delete";
+import { GripVerticalIcon } from "@/components/ui/grip-vertical";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,6 +48,92 @@ import { GroupForm } from "./group-form";
 import { cn } from "@/lib/utils";
 import type { Group } from "@/types/database";
 
+interface SortableGroupItemProps {
+  group: Group;
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function SortableGroupItem({
+  group,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete,
+}: SortableGroupItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: group.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group flex items-center gap-1 px-2 py-1.5 text-sm rounded-md transition-colors",
+        isSelected
+          ? "bg-accent text-accent-foreground"
+          : "hover:bg-accent/50",
+        isDragging && "opacity-50 z-50"
+      )}
+    >
+      <button
+        type="button"
+        className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVerticalIcon size={14} />
+      </button>
+
+      <button
+        onClick={onSelect}
+        className="flex-1 flex items-center gap-2 text-left min-w-0"
+      >
+        <div
+          className="h-3 w-3 rounded-full flex-shrink-0"
+          style={{ backgroundColor: group.color }}
+        />
+        <span className="truncate">{group.name}</span>
+      </button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onEdit}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onDelete} className="text-destructive">
+            <DeleteIcon size={16} className="mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 interface GroupListProps {
   groups: Group[];
   selectedGroupId: string | null;
@@ -36,6 +141,7 @@ interface GroupListProps {
   onCreateGroup: (data: { name: string; color: string }) => Promise<void>;
   onUpdateGroup: (id: string, data: { name: string; color: string }) => Promise<void>;
   onDeleteGroup: (id: string) => Promise<void>;
+  onReorderGroups?: (orderedIds: string[]) => Promise<void>;
 }
 
 export function GroupList({
@@ -45,10 +151,22 @@ export function GroupList({
   onCreateGroup,
   onUpdateGroup,
   onDeleteGroup,
+  onReorderGroups,
 }: GroupListProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [deletingGroup, setDeletingGroup] = useState<Group | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   async function handleCreate(data: { name: string; color: string }) {
     await onCreateGroup(data);
@@ -69,6 +187,17 @@ export function GroupList({
       if (selectedGroupId === deletingGroup.id) {
         onSelectGroup(null);
       }
+    }
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = groups.findIndex((g) => g.id === active.id);
+      const newIndex = groups.findIndex((g) => g.id === over.id);
+      const newOrder = arrayMove(groups, oldIndex, newIndex);
+      onReorderGroups?.(newOrder.map((g) => g.id));
     }
   }
 
@@ -101,53 +230,27 @@ export function GroupList({
         <span>All Bookmarks</span>
       </button>
 
-      {groups.map((group) => (
-        <div
-          key={group.id}
-          className={cn(
-            "group flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors",
-            selectedGroupId === group.id
-              ? "bg-accent text-accent-foreground"
-              : "hover:bg-accent/50"
-          )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={groups.map((g) => g.id)}
+          strategy={verticalListSortingStrategy}
         >
-          <button
-            onClick={() => onSelectGroup(group.id)}
-            className="flex-1 flex items-center gap-2 text-left"
-          >
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: group.color }}
+          {groups.map((group) => (
+            <SortableGroupItem
+              key={group.id}
+              group={group}
+              isSelected={selectedGroupId === group.id}
+              onSelect={() => onSelectGroup(group.id)}
+              onEdit={() => setEditingGroup(group)}
+              onDelete={() => setDeletingGroup(group)}
             />
-            <span className="truncate">{group.name}</span>
-          </button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditingGroup(group)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeletingGroup(group)}
-                className="text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ))}
+          ))}
+        </SortableContext>
+      </DndContext>
 
       {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

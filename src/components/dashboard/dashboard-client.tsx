@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GroupList } from "@/components/groups/group-list";
 import { BookmarkList } from "@/components/bookmarks/bookmark-list";
-import { BookmarkInput, type BookmarkInputHandle } from "@/components/bookmarks/bookmark-input";
+import { BookmarkInput } from "@/components/bookmarks/bookmark-input";
 import { BookmarkSearch } from "@/components/bookmarks/bookmark-search";
-import { SearchTrigger } from "@/components/bookmarks/search-trigger";
 import { TextExtractor } from "@/components/ai/text-extractor";
 import { ScreenshotExtractor } from "@/components/ai/screenshot-extractor";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import {
   createGroup,
   updateGroup,
   deleteGroup,
+  reorderGroups,
 } from "@/app/actions/groups";
 import {
   getBookmarks,
@@ -23,6 +23,7 @@ import {
   updateBookmark,
   deleteBookmark,
   toggleFavorite,
+  reorderBookmarks,
 } from "@/app/actions/bookmarks";
 import type { Group, Bookmark } from "@/types/database";
 
@@ -43,20 +44,14 @@ export function DashboardClient({
   const [searchOpen, setSearchOpen] = useState(false);
   const [textExtractorOpen, setTextExtractorOpen] = useState(false);
   const [screenshotExtractorOpen, setScreenshotExtractorOpen] = useState(false);
-  const bookmarkInputRef = useRef<BookmarkInputHandle>(null);
 
   // Keyboard shortcuts
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      // Cmd+K - Search
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      // Cmd+F - Search
+      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setSearchOpen((open) => !open);
-      }
-      // Cmd+N - New bookmark
-      if (e.key === "n" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        bookmarkInputRef.current?.focus();
       }
     };
     document.addEventListener("keydown", down);
@@ -219,11 +214,36 @@ export function DashboardClient({
     await refreshBookmarks();
   }
 
+  // Reorder handlers
+  async function handleReorderBookmarks(orderedIds: string[]) {
+    // Optimistic update
+    const reordered = orderedIds
+      .map((id) => bookmarks.find((b) => b.id === id))
+      .filter((b): b is Bookmark => b !== undefined);
+    setBookmarks(reordered);
+
+    const result = await reorderBookmarks(orderedIds);
+    if (result.error) {
+      await refreshBookmarks();
+    }
+  }
+
+  async function handleReorderGroups(orderedIds: string[]) {
+    // Optimistic update
+    const reordered = orderedIds
+      .map((id) => groups.find((g) => g.id === id))
+      .filter((g): g is Group => g !== undefined);
+    setGroups(reordered);
+
+    const result = await reorderGroups(orderedIds);
+    if (result.error) {
+      await refreshGroups();
+    }
+  }
+
   return (
     <>
       <BookmarkSearch
-        bookmarks={bookmarks}
-        groups={groups}
         open={searchOpen}
         onOpenChange={setSearchOpen}
       />
@@ -246,8 +266,6 @@ export function DashboardClient({
               <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
             </div>
 
-            <SearchTrigger onClick={() => setSearchOpen(true)} />
-
             <GroupList
               groups={groups}
               selectedGroupId={selectedGroupId}
@@ -255,6 +273,7 @@ export function DashboardClient({
               onCreateGroup={handleCreateGroup}
               onUpdateGroup={handleUpdateGroup}
               onDeleteGroup={handleDeleteGroup}
+              onReorderGroups={handleReorderGroups}
             />
 
             <form action={signOut}>
@@ -268,7 +287,7 @@ export function DashboardClient({
         {/* Main content */}
         <main className="flex-1 space-y-6">
           <div className="space-y-3">
-            <BookmarkInput ref={bookmarkInputRef} onAdd={handleAddBookmark} />
+            <BookmarkInput onAdd={handleAddBookmark} />
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -296,6 +315,7 @@ export function DashboardClient({
             onUpdate={handleUpdateBookmark}
             onDelete={handleDeleteBookmark}
             onToggleFavorite={handleToggleFavorite}
+            onReorder={handleReorderBookmarks}
           />
         </main>
       </div>

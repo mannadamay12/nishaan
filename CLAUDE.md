@@ -14,19 +14,20 @@
 - [x] Groups CRUD with color picker
 - [x] Filter bookmarks by group
 - [x] Favorites (toggle and display)
-- [x] Global search (`Cmd+K`)
-- [x] New bookmark shortcut (`Cmd+N`)
+- [x] Global search (`Cmd+F`)
 - [x] Optimistic UI updates
 
 ### Phase 2: AI Features ✅ Complete
 - [x] Text URL extraction (paste text → extract URLs via Gemini)
 - [x] Screenshot URL extraction (paste image → OCR → extract URLs via Gemini)
 
-### Phase 3: Polish (Future)
-- [ ] Drag-drop reorder
-- [ ] Search match highlighting
-- [ ] Browser extension
-- [ ] Import from browser bookmarks
+### Phase 3: Polish ✅ Complete
+- [x] Drag-drop reorder (bookmarks and groups)
+- [x] Search match highlighting
+- [x] Animated icons (lucide-animated)
+
+### Phase 4: Next
+- [ ] TBD
 
 ## Philosophy
 
@@ -83,6 +84,11 @@ nishaan/
 bun dev                     # Start dev server (localhost:3000)
 bun run build               # Production build
 bun run lint                # ESLint
+
+# Testing
+bun test                    # Unit tests (vitest)
+bun run test:e2e            # E2E tests (playwright)
+bun run test:all            # Both unit + e2e
 
 # Database
 bunx supabase start         # Start local Supabase

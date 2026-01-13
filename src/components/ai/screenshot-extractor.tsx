@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Loader2, ImageIcon, X, Check, ExternalLink, Upload } from "lucide-react";
+import { Loader2, ImageIcon, X, ExternalLink, Upload } from "lucide-react";
+import { CheckIcon } from "@/components/ui/check";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -322,7 +323,7 @@ export function ScreenshotExtractor({
                     </>
                   ) : (
                     <>
-                      <Check className="h-4 w-4 mr-2" />
+                      <CheckIcon size={16} className="mr-2" />
                       Save {selectedUrls.size} bookmark
                       {selectedUrls.size !== 1 && "s"}
                     </>

@@ -1,0 +1,3 @@
+[test]
+# Only scan unit tests - e2e tests require playwright (bun run test:e2e)
+root = "./tests/unit"

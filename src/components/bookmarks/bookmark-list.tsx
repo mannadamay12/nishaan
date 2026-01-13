@@ -2,6 +2,21 @@
 
 import { useState } from "react";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -17,6 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { SortableItem } from "@/components/ui/sortable-item";
 import { BookmarkCard } from "./bookmark-card";
 import { BookmarkForm } from "./bookmark-form";
 import type { Bookmark, Group } from "@/types/database";
@@ -27,6 +43,7 @@ interface BookmarkListProps {
   onUpdate: (id: string, data: { title: string; description: string; group_id: string | null }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onToggleFavorite: (id: string, isFavorite: boolean) => Promise<void>;
+  onReorder?: (orderedIds: string[]) => Promise<void>;
 }
 
 export function BookmarkList({
@@ -35,9 +52,21 @@ export function BookmarkList({
   onUpdate,
   onDelete,
   onToggleFavorite,
+  onReorder,
 }: BookmarkListProps) {
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const getGroup = (groupId: string | null) => {
     if (!groupId) return null;
@@ -58,6 +87,17 @@ export function BookmarkList({
     }
   }
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = bookmarks.findIndex((b) => b.id === active.id);
+      const newIndex = bookmarks.findIndex((b) => b.id === over.id);
+      const newOrder = arrayMove(bookmarks, oldIndex, newIndex);
+      onReorder?.(newOrder.map((b) => b.id));
+    }
+  }
+
   if (bookmarks.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
@@ -70,18 +110,30 @@ export function BookmarkList({
 
   return (
     <>
-      <div className="space-y-2">
-        {bookmarks.map((bookmark) => (
-          <BookmarkCard
-            key={bookmark.id}
-            bookmark={bookmark}
-            group={getGroup(bookmark.group_id)}
-            onEdit={setEditingBookmark}
-            onDelete={setDeletingBookmark}
-            onToggleFavorite={(b) => onToggleFavorite(b.id, !b.is_favorite)}
-          />
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={bookmarks.map((b) => b.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2">
+            {bookmarks.map((bookmark) => (
+              <SortableItem key={bookmark.id} id={bookmark.id}>
+                <BookmarkCard
+                  bookmark={bookmark}
+                  group={getGroup(bookmark.group_id)}
+                  onEdit={setEditingBookmark}
+                  onDelete={setDeletingBookmark}
+                  onToggleFavorite={(b) => onToggleFavorite(b.id, !b.is_favorite)}
+                />
+              </SortableItem>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Edit Dialog */}
       <Dialog open={!!editingBookmark} onOpenChange={() => setEditingBookmark(null)}>

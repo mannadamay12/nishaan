@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles, X, Check, ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink } from "lucide-react";
+import { SparklesIcon } from "@/components/ui/sparkles";
+import { CheckIcon } from "@/components/ui/check";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -105,7 +107,7 @@ export function TextExtractor({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
+            <SparklesIcon size={20} />
             Extract URLs from Text
           </DialogTitle>
           <DialogDescription>
@@ -141,7 +143,7 @@ export function TextExtractor({
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 mr-2" />
+                    <SparklesIcon size={16} className="mr-2" />
                     Extract URLs
                   </>
                 )}
@@ -214,7 +216,7 @@ export function TextExtractor({
                     </>
                   ) : (
                     <>
-                      <Check className="h-4 w-4 mr-2" />
+                      <CheckIcon size={16} className="mr-2" />
                       Save {selectedUrls.size} bookmark{selectedUrls.size !== 1 && "s"}
                     </>
                   )}

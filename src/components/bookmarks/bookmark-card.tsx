@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, MoreHorizontal, Pencil, Trash2, Star } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Pencil } from "lucide-react";
+import { HeartIcon } from "@/components/ui/heart";
+import { DeleteIcon } from "@/components/ui/delete";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,7 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import type { Bookmark, Group } from "@/types/database";
 
 interface BookmarkCardProps {
@@ -97,10 +98,10 @@ export function BookmarkCard({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 flex-shrink-0"
+          className="h-7 w-7 flex-shrink-0 text-red-500"
           onClick={() => onToggleFavorite(bookmark)}
         >
-          <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+          <HeartIcon size={16} className="[&_svg]:fill-current" />
         </Button>
       )}
 
@@ -113,7 +114,7 @@ export function BookmarkCard({
             className="h-7 w-7"
             onClick={() => onToggleFavorite(bookmark)}
           >
-            <Star className="h-4 w-4" />
+            <HeartIcon size={16} />
           </Button>
         )}
 
@@ -132,7 +133,7 @@ export function BookmarkCard({
               onClick={() => onDelete(bookmark)}
               className="text-destructive"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <DeleteIcon size={16} className="mr-2" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
