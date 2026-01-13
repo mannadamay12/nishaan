@@ -6,7 +6,10 @@ import { BookmarkList } from "@/components/bookmarks/bookmark-list";
 import { BookmarkInput, type BookmarkInputHandle } from "@/components/bookmarks/bookmark-input";
 import { BookmarkSearch } from "@/components/bookmarks/bookmark-search";
 import { SearchTrigger } from "@/components/bookmarks/search-trigger";
+import { TextExtractor } from "@/components/ai/text-extractor";
+import { ScreenshotExtractor } from "@/components/ai/screenshot-extractor";
 import { Button } from "@/components/ui/button";
+import { FileText, ImageIcon } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import {
   getGroups,
@@ -38,6 +41,8 @@ export function DashboardClient({
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(initialBookmarks);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [textExtractorOpen, setTextExtractorOpen] = useState(false);
+  const [screenshotExtractorOpen, setScreenshotExtractorOpen] = useState(false);
   const bookmarkInputRef = useRef<BookmarkInputHandle>(null);
 
   // Keyboard shortcuts
@@ -206,6 +211,14 @@ export function DashboardClient({
     }
   }
 
+  // Batch save URLs from AI extraction
+  async function handleBatchSaveUrls(urls: string[]) {
+    for (const url of urls) {
+      await createBookmark(url, selectedGroupId);
+    }
+    await refreshBookmarks();
+  }
+
   return (
     <>
       <BookmarkSearch
@@ -213,6 +226,16 @@ export function DashboardClient({
         groups={groups}
         open={searchOpen}
         onOpenChange={setSearchOpen}
+      />
+      <TextExtractor
+        open={textExtractorOpen}
+        onOpenChange={setTextExtractorOpen}
+        onSaveUrls={handleBatchSaveUrls}
+      />
+      <ScreenshotExtractor
+        open={screenshotExtractorOpen}
+        onOpenChange={setScreenshotExtractorOpen}
+        onSaveUrls={handleBatchSaveUrls}
       />
       <div className="flex gap-8">
         {/* Sidebar */}
@@ -244,7 +267,29 @@ export function DashboardClient({
 
         {/* Main content */}
         <main className="flex-1 space-y-6">
-          <BookmarkInput ref={bookmarkInputRef} onAdd={handleAddBookmark} />
+          <div className="space-y-3">
+            <BookmarkInput ref={bookmarkInputRef} onAdd={handleAddBookmark} />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTextExtractorOpen(true)}
+                className="text-muted-foreground"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Extract from text
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setScreenshotExtractorOpen(true)}
+                className="text-muted-foreground"
+              >
+                <ImageIcon className="h-4 w-4 mr-2" />
+                Extract from screenshot
+              </Button>
+            </div>
+          </div>
           <BookmarkList
             bookmarks={filteredBookmarks}
             groups={groups}

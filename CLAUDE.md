@@ -18,9 +18,9 @@
 - [x] New bookmark shortcut (`Cmd+N`)
 - [x] Optimistic UI updates
 
-### Phase 2: AI Features (Next)
-- [ ] Text URL extraction (paste text → extract URLs)
-- [ ] Screenshot URL extraction (paste image → OCR → extract URLs)
+### Phase 2: AI Features ✅ Complete
+- [x] Text URL extraction (paste text → extract URLs via Gemini)
+- [x] Screenshot URL extraction (paste image → OCR → extract URLs via Gemini)
 
 ### Phase 3: Polish (Future)
 - [ ] Drag-drop reorder
