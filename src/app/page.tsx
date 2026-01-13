@@ -1,19 +1,6 @@
-import Header from "@/components/sections/header";
-import HeroSection from "@/components/sections/hero";
-import AboutSection from "@/components/sections/about";
-import JoinSection from "@/components/sections/join";
-import Footer from "@/components/sections/footer";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <div className="container">
-      <Header />
-      <main>
-        <HeroSection />
-        <AboutSection />
-        <JoinSection />
-      </main>
-      <Footer />
-    </div>
-  );
+  // Redirect to login for now - will add proper landing page later if needed
+  redirect("/login");
 }
