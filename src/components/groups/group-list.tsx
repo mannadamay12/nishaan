@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -153,9 +153,14 @@ export function GroupList({
   onDeleteGroup,
   onReorderGroups,
 }: GroupListProps) {
+  const [mounted, setMounted] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [deletingGroup, setDeletingGroup] = useState<Group | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -230,27 +235,48 @@ export function GroupList({
         <span>All Bookmarks</span>
       </button>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={groups.map((g) => g.id)}
-          strategy={verticalListSortingStrategy}
+      {mounted ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          {groups.map((group) => (
-            <SortableGroupItem
-              key={group.id}
-              group={group}
-              isSelected={selectedGroupId === group.id}
-              onSelect={() => onSelectGroup(group.id)}
-              onEdit={() => setEditingGroup(group)}
-              onDelete={() => setDeletingGroup(group)}
+          <SortableContext
+            items={groups.map((g) => g.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {groups.map((group) => (
+              <SortableGroupItem
+                key={group.id}
+                group={group}
+                isSelected={selectedGroupId === group.id}
+                onSelect={() => onSelectGroup(group.id)}
+                onEdit={() => setEditingGroup(group)}
+                onDelete={() => setDeletingGroup(group)}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        groups.map((group) => (
+          <button
+            key={group.id}
+            onClick={() => onSelectGroup(group.id)}
+            className={cn(
+              "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors",
+              selectedGroupId === group.id
+                ? "bg-accent text-accent-foreground"
+                : "hover:bg-accent/50"
+            )}
+          >
+            <div
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: group.color }}
             />
-          ))}
-        </SortableContext>
-      </DndContext>
+            <span className="truncate">{group.name}</span>
+          </button>
+        ))
+      )}
 
       {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

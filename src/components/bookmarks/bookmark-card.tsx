@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, MoreHorizontal, Pencil } from "lucide-react";
+import { Archive, BookMarked, ExternalLink, MoreHorizontal, Pencil, RotateCcw, Square, CheckSquare, X } from "lucide-react";
 import { HeartIcon } from "@/components/ui/heart";
 import { DeleteIcon } from "@/components/ui/delete";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,14 @@ interface BookmarkCardProps {
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmark: Bookmark) => void;
   onToggleFavorite: (bookmark: Bookmark) => void;
+  onArchive?: (bookmark: Bookmark) => void;
+  onRestore?: (bookmark: Bookmark) => void;
+  isArchived?: boolean;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelection?: () => void;
+  onAddTag?: (bookmark: Bookmark, tag: string) => void;
+  onRemoveTag?: (bookmark: Bookmark, tag: string) => void;
 }
 
 export function BookmarkCard({
@@ -27,6 +35,14 @@ export function BookmarkCard({
   onEdit,
   onDelete,
   onToggleFavorite,
+  onArchive,
+  onRestore,
+  isArchived = false,
+  selectionMode = false,
+  selected = false,
+  onToggleSelection,
+  onAddTag,
+  onRemoveTag,
 }: BookmarkCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -39,7 +55,29 @@ export function BookmarkCard({
   })();
 
   return (
-    <div className="group flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors">
+    <div
+      className={`group flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors ${
+        selected ? "ring-2 ring-primary" : ""
+      }`}
+      onClick={selectionMode && onToggleSelection ? onToggleSelection : undefined}
+    >
+      {/* Selection checkbox */}
+      {selectionMode && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelection?.();
+          }}
+          className="flex-shrink-0 mt-0.5"
+        >
+          {selected ? (
+            <CheckSquare className="h-5 w-5 text-primary" />
+          ) : (
+            <Square className="h-5 w-5 text-muted-foreground" />
+          )}
+        </button>
+      )}
+
       {/* Favicon */}
       <div className="flex-shrink-0 mt-0.5">
         {bookmark.favicon_url && !imageError ? (
@@ -91,6 +129,31 @@ export function BookmarkCard({
             {bookmark.description}
           </p>
         )}
+        {/* Tags */}
+        {bookmark.tags && bookmark.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {bookmark.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary"
+              >
+                {tag}
+                {onRemoveTag && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onRemoveTag(bookmark, tag);
+                    }}
+                    className="hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Favorite indicator (always visible when favorited) */}
@@ -129,6 +192,23 @@ export function BookmarkCard({
               <Pencil className="h-4 w-4 mr-2" />
               Edit
             </DropdownMenuItem>
+            {onAddTag && !bookmark.tags?.includes("read-later") && (
+              <DropdownMenuItem onClick={() => onAddTag(bookmark, "read-later")}>
+                <BookMarked className="h-4 w-4 mr-2" />
+                Read later
+              </DropdownMenuItem>
+            )}
+            {isArchived && onRestore ? (
+              <DropdownMenuItem onClick={() => onRestore(bookmark)}>
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Restore
+              </DropdownMenuItem>
+            ) : onArchive ? (
+              <DropdownMenuItem onClick={() => onArchive(bookmark)}>
+                <Archive className="h-4 w-4 mr-2" />
+                Archive
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem
               onClick={() => onDelete(bookmark)}
               className="text-destructive"

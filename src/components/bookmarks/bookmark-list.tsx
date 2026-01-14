@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -44,6 +44,14 @@ interface BookmarkListProps {
   onDelete: (id: string) => Promise<void>;
   onToggleFavorite: (id: string, isFavorite: boolean) => Promise<void>;
   onReorder?: (orderedIds: string[]) => Promise<void>;
+  onArchive?: (id: string) => Promise<void>;
+  onRestore?: (id: string) => Promise<void>;
+  isArchiveView?: boolean;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelection?: (id: string) => void;
+  onAddTag?: (id: string, tag: string) => Promise<void>;
+  onRemoveTag?: (id: string, tag: string) => Promise<void>;
 }
 
 export function BookmarkList({
@@ -53,9 +61,22 @@ export function BookmarkList({
   onDelete,
   onToggleFavorite,
   onReorder,
+  onArchive,
+  onRestore,
+  isArchiveView = false,
+  selectionMode = false,
+  selectedIds = new Set(),
+  onToggleSelection,
+  onAddTag,
+  onRemoveTag,
 }: BookmarkListProps) {
+  const [mounted, setMounted] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -102,7 +123,9 @@ export function BookmarkList({
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
         <p className="text-muted-foreground">
-          No bookmarks yet. Add your first bookmark above.
+          {isArchiveView
+            ? "No archived bookmarks."
+            : "No bookmarks yet. Add your first bookmark above."}
         </p>
       </div>
     );
@@ -110,30 +133,61 @@ export function BookmarkList({
 
   return (
     <>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={bookmarks.map((b) => b.id)}
-          strategy={verticalListSortingStrategy}
+      {mounted && onReorder ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <div className="space-y-2">
-            {bookmarks.map((bookmark) => (
-              <SortableItem key={bookmark.id} id={bookmark.id}>
-                <BookmarkCard
-                  bookmark={bookmark}
-                  group={getGroup(bookmark.group_id)}
-                  onEdit={setEditingBookmark}
-                  onDelete={setDeletingBookmark}
-                  onToggleFavorite={(b) => onToggleFavorite(b.id, !b.is_favorite)}
-                />
-              </SortableItem>
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+          <SortableContext
+            items={bookmarks.map((b) => b.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {bookmarks.map((bookmark) => (
+                <SortableItem key={bookmark.id} id={bookmark.id}>
+                  <BookmarkCard
+                    bookmark={bookmark}
+                    group={getGroup(bookmark.group_id)}
+                    onEdit={setEditingBookmark}
+                    onDelete={setDeletingBookmark}
+                    onToggleFavorite={(b) => onToggleFavorite(b.id, !b.is_favorite)}
+                    onArchive={onArchive ? (b) => onArchive(b.id) : undefined}
+                    onRestore={onRestore ? (b) => onRestore(b.id) : undefined}
+                    isArchived={isArchiveView}
+                    selectionMode={selectionMode}
+                    selected={selectedIds.has(bookmark.id)}
+                    onToggleSelection={onToggleSelection ? () => onToggleSelection(bookmark.id) : undefined}
+                    onAddTag={onAddTag ? (b, tag) => onAddTag(b.id, tag) : undefined}
+                    onRemoveTag={onRemoveTag ? (b, tag) => onRemoveTag(b.id, tag) : undefined}
+                  />
+                </SortableItem>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="space-y-2">
+          {bookmarks.map((bookmark) => (
+            <BookmarkCard
+              key={bookmark.id}
+              bookmark={bookmark}
+              group={getGroup(bookmark.group_id)}
+              onEdit={setEditingBookmark}
+              onDelete={setDeletingBookmark}
+              onToggleFavorite={(b) => onToggleFavorite(b.id, !b.is_favorite)}
+              onArchive={onArchive ? (b) => onArchive(b.id) : undefined}
+              onRestore={onRestore ? (b) => onRestore(b.id) : undefined}
+              isArchived={isArchiveView}
+              selectionMode={selectionMode}
+              selected={selectedIds.has(bookmark.id)}
+              onToggleSelection={onToggleSelection ? () => onToggleSelection(bookmark.id) : undefined}
+              onAddTag={onAddTag ? (b, tag) => onAddTag(b.id, tag) : undefined}
+              onRemoveTag={onRemoveTag ? (b, tag) => onRemoveTag(b.id, tag) : undefined}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={!!editingBookmark} onOpenChange={() => setEditingBookmark(null)}>

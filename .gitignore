@@ -37,3 +37,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env.local
+playwright-report
+docs
+supabase/.branches
+supabase/.temp
+test-results

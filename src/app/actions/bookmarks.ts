@@ -163,3 +163,168 @@ export async function reorderBookmarks(orderedIds: string[]) {
   revalidatePath("/dashboard");
   return { success: true };
 }
+
+export async function archiveBookmark(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  const { error } = await supabase
+    .from("bookmarks")
+    .update({ is_archived: true })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function restoreBookmark(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  const { error } = await supabase
+    .from("bookmarks")
+    .update({ is_archived: false })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function getArchivedBookmarks() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated", bookmarks: [] };
+  }
+
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("is_archived", true)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    return { error: error.message, bookmarks: [] };
+  }
+
+  return { bookmarks: data };
+}
+
+export async function addTag(id: string, tag: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  // First get current tags
+  const { data: bookmark, error: fetchError } = await supabase
+    .from("bookmarks")
+    .select("tags")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (fetchError) {
+    return { error: fetchError.message };
+  }
+
+  const currentTags = bookmark?.tags || [];
+  if (currentTags.includes(tag)) {
+    return { success: true }; // Already has tag
+  }
+
+  const { error } = await supabase
+    .from("bookmarks")
+    .update({ tags: [...currentTags, tag] })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function removeTag(id: string, tag: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  // First get current tags
+  const { data: bookmark, error: fetchError } = await supabase
+    .from("bookmarks")
+    .select("tags")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (fetchError) {
+    return { error: fetchError.message };
+  }
+
+  const currentTags = bookmark?.tags || [];
+  const newTags = currentTags.filter((t: string) => t !== tag);
+
+  const { error } = await supabase
+    .from("bookmarks")
+    .update({ tags: newTags })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function getBookmarksByTag(tag: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated", bookmarks: [] };
+  }
+
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("is_archived", false)
+    .contains("tags", [tag])
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return { error: error.message, bookmarks: [] };
+  }
+
+  return { bookmarks: data };
+}

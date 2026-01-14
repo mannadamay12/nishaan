@@ -4,147 +4,308 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
-export interface Database {
+export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      bookmarks: {
-        Row: {
-          id: string;
-          user_id: string;
-          url: string;
-          title: string | null;
-          description: string | null;
-          favicon_url: string | null;
-          preview_image_url: string | null;
-          site_name: string | null;
-          group_id: string | null;
-          tags: string[];
-          sort_order: number;
-          source: "manual" | "text_extract" | "screenshot" | "import" | "extension";
-          source_metadata: Json;
-          is_archived: boolean;
-          is_favorite: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          url: string;
-          title?: string | null;
-          description?: string | null;
-          favicon_url?: string | null;
-          preview_image_url?: string | null;
-          site_name?: string | null;
-          group_id?: string | null;
-          tags?: string[];
-          sort_order?: number;
-          source?: "manual" | "text_extract" | "screenshot" | "import" | "extension";
-          source_metadata?: Json;
-          is_archived?: boolean;
-          is_favorite?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          url?: string;
-          title?: string | null;
-          description?: string | null;
-          favicon_url?: string | null;
-          preview_image_url?: string | null;
-          site_name?: string | null;
-          group_id?: string | null;
-          tags?: string[];
-          sort_order?: number;
-          source?: "manual" | "text_extract" | "screenshot" | "import" | "extension";
-          source_metadata?: Json;
-          is_archived?: boolean;
-          is_favorite?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      groups: {
-        Row: {
-          id: string;
-          user_id: string;
-          name: string;
-          color: string;
-          sort_order: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          name: string;
-          color?: string;
-          sort_order?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          name?: string;
-          color?: string;
-          sort_order?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
       bookmark_content: {
         Row: {
-          id: string;
-          bookmark_id: string;
-          content: string | null;
-          content_hash: string | null;
-          crawled_at: string | null;
-          created_at: string;
-        };
+          bookmark_id: string
+          content: string | null
+          content_hash: string | null
+          crawled_at: string | null
+          created_at: string | null
+          id: string
+        }
         Insert: {
-          id?: string;
-          bookmark_id: string;
-          content?: string | null;
-          content_hash?: string | null;
-          crawled_at?: string | null;
-          created_at?: string;
-        };
+          bookmark_id: string
+          content?: string | null
+          content_hash?: string | null
+          crawled_at?: string | null
+          created_at?: string | null
+          id?: string
+        }
         Update: {
-          id?: string;
-          bookmark_id?: string;
-          content?: string | null;
-          content_hash?: string | null;
-          crawled_at?: string | null;
-          created_at?: string;
-        };
-      };
-    };
+          bookmark_id?: string
+          content?: string | null
+          content_hash?: string | null
+          crawled_at?: string | null
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmark_content_bookmark_id_fkey"
+            columns: ["bookmark_id"]
+            isOneToOne: true
+            referencedRelation: "bookmarks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookmarks: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          favicon_url: string | null
+          group_id: string | null
+          id: string
+          is_archived: boolean | null
+          is_favorite: boolean | null
+          preview_image_url: string | null
+          site_name: string | null
+          sort_order: number | null
+          source: string | null
+          source_metadata: Json | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          favicon_url?: string | null
+          group_id?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
+          preview_image_url?: string | null
+          site_name?: string | null
+          sort_order?: number | null
+          source?: string | null
+          source_metadata?: Json | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          favicon_url?: string | null
+          group_id?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
+          preview_image_url?: string | null
+          site_name?: string | null
+          sort_order?: number | null
+          source?: string | null
+          source_metadata?: Json | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          color: string
+          created_at: string | null
+          id: string
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Enums: {
-      [_ in never]: never;
-    };
-  };
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-// Convenience types
-export type Bookmark = Database["public"]["Tables"]["bookmarks"]["Row"];
-export type BookmarkInsert = Database["public"]["Tables"]["bookmarks"]["Insert"];
-export type BookmarkUpdate = Database["public"]["Tables"]["bookmarks"]["Update"];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-export type Group = Database["public"]["Tables"]["groups"]["Row"];
-export type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"];
-export type GroupUpdate = Database["public"]["Tables"]["groups"]["Update"];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-export type BookmarkWithGroup = Bookmark & {
-  group: Group | null;
-};
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const
+

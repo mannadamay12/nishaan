@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nish.aan
 
-## Getting Started
+Personal bookmark manager that unifies saved content from across the web.
 
-First, run the development server:
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+# Install dependencies
+bun install
+
+# Setup environment
+cp .env.local.example .env.local
+# Add your Supabase and Gemini API keys
+
+# Start local Supabase
+bunx supabase start
+
+# Run development server
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework**: Next.js 15 (App Router, Server Components)
+- **Database**: Supabase (Postgres + Auth + RLS)
+- **AI**: Google Gemini 2.5 Flash
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Hosting**: Vercel
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
+- Magic link authentication
+- AI URL extraction from text and screenshots
+- Drag-drop reordering
+- Offline-first PWA
+- Search with highlighting
+- Groups and tags
+- Archive and bulk actions
+- Share Target API (Android)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Commands
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+bun dev              # Development server
+bun run build        # Production build
+bun run lint         # Lint code
 
-## Deploy on Vercel
+bunx supabase start  # Start local DB
+bunx supabase db push    # Apply migrations
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Documentation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **CLAUDE.md**: Full developer documentation
+- **DEPLOYMENT.md**: Production deployment guide
+- **spec.md**: Database schema and architecture
+
+## Philosophy
+
+Fast, keyboard-first, clean, smart, personal, mobile-first.
